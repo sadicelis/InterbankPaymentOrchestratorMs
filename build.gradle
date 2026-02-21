@@ -8,13 +8,13 @@ plugins {
 
 group = 'com.payments'
 version = '1.0.0'
+
 java {
     sourceCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
     mavenCentral()
-    maven { url 'https://repo.maven.apache.org/maven2' }
 }
 
 dependencies {
@@ -35,7 +35,6 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.mockito:mockito-junit-jupiter'
     testImplementation 'org.testcontainers:junit-jupiter'
-    testImplementation 'org.testcontainers:mssqlserver'
 }
 
 test {
