@@ -10,12 +10,12 @@ Please follow these steps to start the service:
    docker-compose up -d
 
 2. Create the database
-   docker exec -it sqlserver-payments /opt/mssql-tools18/bin/sqlcmd \
-  -S localhost -U sa -P "StrongPassword123!" -C \
-  -Q "CREATE DATABASE paymentsdb;"
+   ```bash
+   docker exec -it sqlserver-payments /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "StrongPassword123!" -C -Q "CREATE DATABASE paymentsdb;"
 
 3. - Run the microservice
-    ./gradlew bootRun
+   ```bash
+   ./gradlew bootRun
 
 
 This way the instructions are clear, formatted, and ready for Markdown. Do you want me to also add a **Prerequisites** section (Java 21, Docker, Gradle)
