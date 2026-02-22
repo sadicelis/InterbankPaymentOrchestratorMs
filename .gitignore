@@ -1,0 +1,18 @@
+# Gradle temporary files
+.gradle/
+build/
+
+# IDE files (VS Code)
+.vscode/
+bin/
+
+# Java / Compilation
+*.class
+*.log
+
+# Windows specific
+Thumbs.db
+desktop.ini
+bin/main/com/payments/orchestrator/model/PaymentStatus.class
+bin/main/application.yml
+bin/main/com/payments/orchestrator/model/PaymentStatus.class

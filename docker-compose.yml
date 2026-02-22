@@ -8,3 +8,17 @@ services:
       - SA_PASSWORD=StrongPassword123!
     ports:
       - "1433:1433"
+      
+bank-mock:
+    image: hashicorp/http-echo
+    command: ["-text=true"]
+    ports:
+      - "8081:5678"
+
+orchestrator:
+    build: .
+    depends_on:
+      - sqlserver
+      - bank-mock
+    ports:
+      - "8080:8080"
