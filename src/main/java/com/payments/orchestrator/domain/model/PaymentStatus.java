@@ -1,4 +1,4 @@
-package com.payments.orchestrator.model;
+package com.payments.orchestrator.domain.model;
 
 import jakarta.persistence.*;
 import lombok.Data;

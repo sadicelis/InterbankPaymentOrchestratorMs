@@ -19,3 +19,13 @@ Please follow these steps to start the service:
 
 
 This way the instructions are clear, formatted, and ready for Markdown. Do you want me to also add a **Prerequisites** section (Java 21, Docker, Gradle)
+
+## Stack
+- Java 21
+- Spring Boot 3
+- WebFlux (Reactive WebClient)
+- JPA + SQL Server
+- Flyway
+- Resilience4j
+- Testcontainers
+- Jacoco

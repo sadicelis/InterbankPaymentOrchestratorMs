@@ -13,3 +13,6 @@ bin/
 # Windows specific
 Thumbs.db
 desktop.ini
+bin/main/com/payments/orchestrator/model/PaymentStatus.class
+bin/main/application.yml
+bin/main/com/payments/orchestrator/model/PaymentStatus.class
