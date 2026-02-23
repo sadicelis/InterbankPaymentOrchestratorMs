@@ -21,6 +21,8 @@ resilience4j:
       bankService:
         slidingWindowSize: 10
         failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 10s
   retry:
     instances:
       bankService:

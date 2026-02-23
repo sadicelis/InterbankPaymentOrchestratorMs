@@ -1,4 +1,4 @@
-package com.payments.orchestrator.infrastructure.adapter.out.persistence;
+package com.payments.orchestrator.infrastructure.adapter.out.persistence.Entities;
 
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,4 +1,4 @@
-package com.payments.orchestrator.infrastructure.adapter.out.persistence;
+package com.payments.orchestrator.infrastructure.adapter.out.persistence.Entities;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -33,7 +33,7 @@ public class TransactionEntity {
     @Column(nullable = false)
     private String status;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "bank_id", nullable = false)
     private BankEntity bank;
 

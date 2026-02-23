@@ -1,49 +1,37 @@
 package com.payments.orchestrator.infrastructure.adapter.in.rest;
 
-import com.payments.orchestrator.application.service.TransferService;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import com.payments.orchestrator.application.service.TransferApplicationService;
+import com.payments.orchestrator.domain.model.aggregate.Transaction;
+import com.payments.orchestrator.infrastructure.adapter.in.rest.dto.TransferRequestDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
+import jakarta.validation.Valid;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/transfers")
 @RequiredArgsConstructor
-@Validated
 public class TransferController {
 
-    private final TransferService service;
+    private final TransferApplicationService service;
 
     @PostMapping
-    public ResponseEntity<UUID> transfer(@RequestBody @Validated TransferRequest request) {
+    public Mono<ResponseEntity<UUID>> transfer(
+            @Valid @RequestBody TransferRequestDto request
+    ) {
 
-        UUID id = service.process(request);
+        Transaction transaction = Transaction.create(
+                request.getReference(),               
+                request.getSourceAccount(),
+                request.getDestinationAccount(),
+                request.getAmount(),
+                request.getBankCode()
+        );
 
-        return ResponseEntity.ok(id);
-    }
-
-    @Data
-    public static class TransferRequest {
-
-        @NotBlank
-        private String reference;
-
-        @NotBlank
-        private String sourceAccount;
-
-        @NotBlank
-        private String destinationAccount;
-
-        @NotNull
-        private BigDecimal amount;
-
-        @NotBlank
-        private String bankCode;
+        return service.process(transaction)
+                .map(ResponseEntity::ok);
     }
 }
