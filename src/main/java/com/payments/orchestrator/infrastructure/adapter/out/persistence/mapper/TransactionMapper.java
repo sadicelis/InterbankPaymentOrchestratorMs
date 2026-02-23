@@ -23,7 +23,7 @@ public class TransactionMapper {
                 entity.getSourceAccount(),
                 entity.getDestinationAccount(),
                 entity.getAmount(),
-                entity.getBank() != null ? entity.getBank().getCode().toString() : null,
+                entity.getBank() != null ? entity.getBank().getCode() : null,
                 TransactionStatus.fromMessage(entity.getStatus()),
                 entity.getErrorMessage(),
                 entity.getCreatedAt(),

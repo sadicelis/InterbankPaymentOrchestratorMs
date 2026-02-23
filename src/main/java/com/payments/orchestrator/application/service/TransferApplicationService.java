@@ -28,30 +28,23 @@ public class TransferApplicationService {
 
         log.info("Starting transaction {}", transaction.getId());
 
-        return repository.savePending(transaction)
-                .flatMap(saved -> {
-                    var strategy = strategyResolver.resolve(saved.getBankId());
+ return repository.savePending(transaction)
+    .flatMap(saved -> {
+        var strategy = strategyResolver.resolve(saved.getBankId());
 
-                    return strategy.sendTransfer(saved)
-                            .timeout(Duration.ofSeconds(3))
-                            .flatMap(result -> finalizeAndPersist(saved, result))
-                            .onErrorResume(ex -> {
-                                saved.markFailed(normalizeError(ex));
-                                return repository.updateStatus(saved);
-                            });
-                })
-                .map(Transaction::getId)
-                .doOnSuccess(id -> log.info("Transaction completed {}", id))
-                .doOnError(error -> log.error("Transaction failed", error));
-    }
-
-    private Mono<Transaction> finalizeAndPersist(Transaction saved, BankTransferResult result) {
-        if (result.isSuccess()) {
-            saved.markSuccessful();
-        } else {
-            saved.markFailed(buildFailureMessage(result));
-        }
-        return repository.updateStatus(saved);
+        return strategy.sendTransfer(saved)
+            .timeout(Duration.ofSeconds(3))
+            .flatMap(result -> {
+                if (result.isSuccess()) saved.markSuccessful();
+                else saved.markFailed(buildFailureMessage(result));
+                return repository.updateStatus(saved);
+            })
+            .onErrorResume(ex -> {
+                saved.markFailed(normalizeError(ex));
+                return repository.updateStatus(saved);
+            });
+    })
+    .map(Transaction::getId);
     }
 
     private String buildFailureMessage(BankTransferResult result) {

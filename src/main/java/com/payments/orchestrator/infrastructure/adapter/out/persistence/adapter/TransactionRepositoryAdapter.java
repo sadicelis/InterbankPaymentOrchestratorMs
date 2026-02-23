@@ -40,9 +40,9 @@ public class TransactionRepositoryAdapter implements TransferRepositoryPort {
         return Mono.fromCallable(() -> {
             TransactionEntity entity = repository.findById(transaction.getId())
                     .orElseThrow(() -> new IllegalStateException("Transaction not found: " + transaction.getId()));
-            entity = mapper.toEntity(transaction, entity.getBank());
-
-            return mapper.toDomain(repository.save(entity));
+            TransactionEntity mapped = mapper.toEntity(transaction, entity.getBank());
+            mapped.setCreatedAt(entity.getCreatedAt());
+            return mapper.toDomain(repository.save(mapped));
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
