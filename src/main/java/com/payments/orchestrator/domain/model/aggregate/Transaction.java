@@ -62,7 +62,6 @@ public class Transaction {
             String bankId,
             TransactionStatus status,
             String errorMessage,
-            LocalDateTime createdAt,
             LocalDateTime updatedAt) {
 
         Transaction transaction = new Transaction(

@@ -13,7 +13,9 @@ spring:
 bank:
   clients:
     BANCO_1:
-      base-url: http://bank-mock:8081
+      base-url: "http://localhost:8080/mock/bank"
+    BANCO_2:
+      base-url: "http://localhost:8080/mock/bank"
 
 resilience4j:
   circuitbreaker:

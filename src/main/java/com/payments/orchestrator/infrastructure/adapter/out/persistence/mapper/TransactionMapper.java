@@ -24,7 +24,6 @@ public class TransactionMapper {
                 entity.getBank() != null ? entity.getBank().getCode().toString() : null,
                 TransactionStatus.fromMessage(entity.getStatus()),
                 entity.getErrorMessage(),
-                entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
     }
