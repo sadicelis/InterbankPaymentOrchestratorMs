@@ -24,3 +24,21 @@ CREATE TABLE transactions (
     CONSTRAINT chk_status
         CHECK (status IN ('PENDIENTE','EXITOSA','FALLIDA'))
 );
+
+INSERT INTO bank (id, code, name, active, created_at)
+VALUES (
+    NEWID(),
+    'BANCO_1',
+    'Banco Demo',
+    1,
+    SYSDATETIME()
+);
+
+INSERT INTO bank (id, code, name, active, created_at)
+VALUES (
+    NEWID(),
+    'BANCO_2',
+    'Banco nuevo',
+    1,
+    SYSDATETIME()
+);

@@ -1,5 +1,6 @@
 package com.payments.orchestrator.infrastructure.adapter.out.persistence.adapter;
 
+import com.payments.orchestrator.application.exception.BankNotFoundException;
 import com.payments.orchestrator.domain.model.aggregate.Transaction;
 import com.payments.orchestrator.domain.model.enums.TransactionStatus;
 import com.payments.orchestrator.infrastructure.adapter.out.persistence.BankJpaRepository;
@@ -7,6 +8,7 @@ import com.payments.orchestrator.infrastructure.adapter.out.persistence.Transact
 import com.payments.orchestrator.infrastructure.adapter.out.persistence.Entities.BankEntity;
 import com.payments.orchestrator.infrastructure.adapter.out.persistence.Entities.TransactionEntity;
 import com.payments.orchestrator.infrastructure.adapter.out.persistence.mapper.TransactionMapper;
+import com.payments.orchestrator.infrastructure.exception.PersistenceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +19,6 @@ import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -103,7 +104,10 @@ class TransactionRepositoryAdapterTest {
         when(bankRepository.findByCodeAndActiveTrue("BANK_X")).thenReturn(Optional.empty());
 
         StepVerifier.create(adapter.savePending(request))
-                .expectError(NoSuchElementException.class) 
+                .expectErrorSatisfies(ex -> {
+                    assertTrue(ex instanceof BankNotFoundException);
+                    assertTrue(ex.getMessage().contains("BANK_X"));
+                })
                 .verify();
 
         verify(bankRepository, times(1)).findByCodeAndActiveTrue("BANK_X");
@@ -154,7 +158,7 @@ class TransactionRepositoryAdapterTest {
         when(repository.findById(id)).thenReturn(Optional.of(existingEntity));
         when(repository.save(any(TransactionEntity.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        // Act
+        
         StepVerifier.create(adapter.updateStatus(txToUpdate))
                 .assertNext(updated -> {
                     assertEquals(id, updated.getId());
@@ -199,7 +203,7 @@ class TransactionRepositoryAdapterTest {
 
         StepVerifier.create(adapter.updateStatus(txToUpdate))
                 .expectErrorSatisfies(ex -> {
-                    assertTrue(ex instanceof IllegalStateException);
+                    assertTrue(ex instanceof PersistenceException);
                     assertTrue(ex.getMessage().contains("Transaction not found"));
                 })
                 .verify();

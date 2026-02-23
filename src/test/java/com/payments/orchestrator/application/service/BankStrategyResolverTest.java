@@ -1,5 +1,7 @@
 package com.payments.orchestrator.application.service;
 
+import com.payments.orchestrator.application.exception.BankNotFoundException;
+import com.payments.orchestrator.application.exception.BankStrategyResolutionException;
 import com.payments.orchestrator.domain.port.BankStrategy;
 import org.junit.jupiter.api.Test;
 
@@ -31,8 +33,8 @@ class BankStrategyResolverTest {
 
         BankStrategyResolver resolver = new BankStrategyResolver(List.of(s1));
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        BankNotFoundException ex = assertThrows(
+                BankNotFoundException.class,
                 () -> resolver.resolve("BANK_X")
         );
 
@@ -47,6 +49,6 @@ class BankStrategyResolverTest {
         BankStrategy s2 = mock(BankStrategy.class);
         when(s2.getBankCode()).thenReturn("BANK_1");
 
-        assertThrows(IllegalStateException.class, () -> new BankStrategyResolver(List.of(s1, s2)));
+        assertThrows(BankStrategyResolutionException.class, () -> new BankStrategyResolver(List.of(s1, s2)));
     }
 }

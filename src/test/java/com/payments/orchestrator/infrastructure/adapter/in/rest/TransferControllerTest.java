@@ -45,9 +45,10 @@ class TransferControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(req)
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(UUID.class)
-                .value(id -> assertEquals(generatedId, id));
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.status").isEqualTo("SUCCESS")
+                .jsonPath("$.data.transactionId").isEqualTo(generatedId.toString());
 
         ArgumentCaptor<Transaction> captor = ArgumentCaptor.forClass(Transaction.class);
         verify(service, times(1)).process(captor.capture());

@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: orchestrator-config
+  namespace: payment-orchestrator
+  labels:
+    app: orchestrator
+    component: config
+data:
+  # Spring profiles
+  SPRING_PROFILES_ACTIVE: "prod"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"
+  SPRING_JPA_OPEN_IN_VIEW: "false"
+  
+  # Logging
+  LOGGING_LEVEL_ROOT: "INFO"
+  LOGGING_LEVEL_COM_PAYMENTS: "DEBUG"
+  
+  # Flyway
+  SPRING_FLYWAY_ENABLED: "true"
+  SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+  
+  # Bank configuration
+  BANK_CLIENTS_BANK_1_BASE_URL: "http://bank-mock:8080"
+  BANK_CLIENTS_BANK_2_BASE_URL: "http://bank-mock:8080"
+  
+  # Resilience4j - Circuit Breaker
+  RESILIENCE4J_CIRCUITBREAKER_CONFIGS_BANKSERVICE_SLIDING_WINDOW_SIZE: "10"
+  RESILIENCE4J_CIRCUITBREAKER_CONFIGS_BANKSERVICE_FAILURE_RATE_THRESHOLD: "50"
+  RESILIENCE4J_CIRCUITBREAKER_CONFIGS_BANKSERVICE_WAIT_DURATION_IN_OPEN_STATE: "10000"
+  
+  # Resilience4j - Retry
+  RESILIENCE4J_RETRY_CONFIGS_BANKSERVICE_MAX_ATTEMPTS: "3"
+  RESILIENCE4J_RETRY_CONFIGS_BANKSERVICE_WAIT_DURATION: "500"
+  
+  # Server
+  SERVER_PORT: "8080"
+  SERVER_SERVLET_CONTEXT_PATH: "/api"
