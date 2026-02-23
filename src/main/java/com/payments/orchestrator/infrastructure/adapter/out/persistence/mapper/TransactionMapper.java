@@ -1,5 +1,7 @@
 package com.payments.orchestrator.infrastructure.adapter.out.persistence.mapper;
 
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Component;
 
 import com.payments.orchestrator.domain.model.aggregate.Transaction;
@@ -24,7 +26,9 @@ public class TransactionMapper {
                 entity.getBank() != null ? entity.getBank().getCode().toString() : null,
                 TransactionStatus.fromMessage(entity.getStatus()),
                 entity.getErrorMessage(),
+                entity.getCreatedAt(),
                 entity.getUpdatedAt()
+                
         );
     }
 

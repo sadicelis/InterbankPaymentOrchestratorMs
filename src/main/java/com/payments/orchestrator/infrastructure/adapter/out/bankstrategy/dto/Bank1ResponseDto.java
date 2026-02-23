@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Bank1ResponseDto {
     private String status;
+    private String code;
     private String transactionId;
     private String message;
 }

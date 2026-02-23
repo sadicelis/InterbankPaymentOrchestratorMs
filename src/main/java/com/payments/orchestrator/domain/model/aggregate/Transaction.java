@@ -22,11 +22,15 @@ public class Transaction {
     private LocalDateTime updatedAt;
 
     private Transaction(UUID id,
-            String reference,
-            String sourceAccount,
-            String destinationAccount,
-            BigDecimal amount,
-            String bankId) {
+                        String reference,
+                        String sourceAccount,
+                        String destinationAccount,
+                        BigDecimal amount,
+                        String bankId,
+                        TransactionStatus status,
+                        String errorMessage,
+                        LocalDateTime createdAt,
+                        LocalDateTime updatedAt) {
 
         this.id = id;
         this.reference = reference;
@@ -34,53 +38,62 @@ public class Transaction {
         this.destinationAccount = destinationAccount;
         this.amount = amount;
         this.bankId = bankId;
-        this.status = TransactionStatus.PENDING;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+
+        this.status = status;
+        this.errorMessage = errorMessage;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     public static Transaction create(String reference,
-            String sourceAccount,
-            String destinationAccount,
-            BigDecimal amount,
-            String bankId) {
+                                     String sourceAccount,
+                                     String destinationAccount,
+                                     BigDecimal amount,
+                                     String bankId) {
 
+        LocalDateTime now = LocalDateTime.now();
         return new Transaction(
                 UUID.randomUUID(),
                 reference,
                 sourceAccount,
                 destinationAccount,
                 amount,
-                bankId);
+                bankId,
+                TransactionStatus.PENDING,
+                null,
+                now,
+                now
+        );
     }
 
     public static Transaction restore(UUID id,
-            String reference,
-            String sourceAccount,
-            String destinationAccount,
-            BigDecimal amount,
-            String bankId,
-            TransactionStatus status,
-            String errorMessage,
-            LocalDateTime updatedAt) {
+                                      String reference,
+                                      String sourceAccount,
+                                      String destinationAccount,
+                                      BigDecimal amount,
+                                      String bankId,
+                                      TransactionStatus status,
+                                      String errorMessage,
+                                      LocalDateTime createdAt,
+                                      LocalDateTime updatedAt) {
 
-        Transaction transaction = new Transaction(
+        return new Transaction(
                 id,
                 reference,
                 sourceAccount,
                 destinationAccount,
                 amount,
-                bankId);
-
-        transaction.status = status;
-        transaction.errorMessage = errorMessage;
-        transaction.updatedAt = updatedAt;
-
-        return transaction;
+                bankId,
+                status,
+                errorMessage,
+                createdAt,
+                updatedAt
+        );
     }
 
     public void markSuccessful() {
         this.status = TransactionStatus.SUCCESSFUL;
+        this.errorMessage = null;
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -89,5 +102,4 @@ public class Transaction {
         this.errorMessage = errorMessage;
         this.updatedAt = LocalDateTime.now();
     }
-
 }

@@ -1,5 +1,6 @@
 package com.payments.orchestrator.infrastructure.adapter.out.bankstrategy;
 
+import com.payments.orchestrator.domain.model.BankTransferResult;
 import com.payments.orchestrator.domain.model.aggregate.Transaction;
 import com.payments.orchestrator.domain.port.BankStrategy;
 import com.payments.orchestrator.infrastructure.adapter.out.bankstrategy.dto.Bank1ResponseDto;
@@ -45,15 +46,15 @@ public class Bank1Strategy implements BankStrategy {
     }
 
     @Override
-    public Mono<Boolean> sendTransfer(Transaction request) {
+    public Mono<BankTransferResult> sendTransfer(Transaction request) {
         return webClient.post()
                 .uri("/transfer")
                 .bodyValue(mapper.toBankRequest(request))
                 .retrieve()
                 .bodyToMono(Bank1ResponseDto.class)
-                .map(res -> "SUCCESS".equals(res.getStatus()))
+                .map(res -> new BankTransferResult("SUCCESS".equals(res.getStatus()), res.getCode(), res.getMessage(), res.getTransactionId()))
                 .onErrorResume(e -> {
-                    return Mono.just(false);
+                    return Mono.just(new BankTransferResult(false, "ERROR", e.getMessage(), null));
                 });
     }
 }

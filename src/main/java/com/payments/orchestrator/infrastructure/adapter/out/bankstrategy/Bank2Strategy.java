@@ -1,5 +1,6 @@
 package com.payments.orchestrator.infrastructure.adapter.out.bankstrategy;
 
+import com.payments.orchestrator.domain.model.BankTransferResult;
 import com.payments.orchestrator.domain.model.aggregate.Transaction;
 import com.payments.orchestrator.domain.port.BankStrategy;
 import com.payments.orchestrator.infrastructure.adapter.out.bankstrategy.dto.BankTransferRequest;
@@ -42,12 +43,12 @@ public class Bank2Strategy implements BankStrategy {
     }
 
     @Override
-    public Mono<Boolean> sendTransfer(Transaction request) {
+    public Mono<BankTransferResult> sendTransfer(Transaction request) {
         BankTransferRequest bankRequest = mapper.toBankRequest(request);
         return Mono.fromCallable(() -> {
             // Simulación llamada bloqueante
             Thread.sleep(200);
-            return true;
+            return new BankTransferResult(true, "00", "Transfer successful", "txn_123");
         }).subscribeOn(Schedulers.boundedElastic());
     }
 }

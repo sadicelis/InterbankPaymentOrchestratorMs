@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class TransactionRepositoryAdapter implements TransferRepositoryPort{
+public class TransactionRepositoryAdapter implements TransferRepositoryPort {
 
     private final TransactionRepository repository;
     private final BankJpaRepository bankRepository;
@@ -31,18 +31,18 @@ public class TransactionRepositoryAdapter implements TransferRepositoryPort{
 
             TransactionEntity entity = mapper.toEntity(request, bank);
 
-             return mapper.toDomain(repository.save(entity));
+            return mapper.toDomain(repository.save(entity));
 
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
     public Mono<Transaction> updateStatus(Transaction transaction) {
         return Mono.fromCallable(() -> {
-
-            TransactionEntity entity = mapper.toEntity(transaction, bankRepository.findByCodeAndActiveTrue(transaction.getBankId()).orElseThrow());
+            TransactionEntity entity = repository.findById(transaction.getId())
+                    .orElseThrow(() -> new IllegalStateException("Transaction not found: " + transaction.getId()));
+            entity = mapper.toEntity(transaction, entity.getBank());
 
             return mapper.toDomain(repository.save(entity));
-
         }).subscribeOn(Schedulers.boundedElastic());
     }
 

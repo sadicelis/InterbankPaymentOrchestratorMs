@@ -9,5 +9,7 @@ public interface TransferRepositoryPort {
 
     Mono<Transaction> savePending(Transaction request);
 
+    Mono<Transaction> updateStatus(Transaction transaction);
+
     //Optional<Transaction> findById(UUID id);
 }
