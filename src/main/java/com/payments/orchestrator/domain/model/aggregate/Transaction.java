@@ -1,5 +1,6 @@
 package com.payments.orchestrator.domain.model.aggregate;
 
+import com.payments.orchestrator.domain.exception.InvalidTransactionException;
 import com.payments.orchestrator.domain.model.enums.TransactionStatus;
 import lombok.Getter;
 
@@ -50,6 +51,31 @@ public class Transaction {
                                      String destinationAccount,
                                      BigDecimal amount,
                                      String bankId) {
+
+        // Validaciones de dominio
+        if (reference == null || reference.isBlank()) {
+            throw new InvalidTransactionException("Transaction reference cannot be null or empty");
+        }
+
+        if (sourceAccount == null || sourceAccount.isBlank()) {
+            throw new InvalidTransactionException("Source account cannot be null or empty");
+        }
+
+        if (destinationAccount == null || destinationAccount.isBlank()) {
+            throw new InvalidTransactionException("Destination account cannot be null or empty");
+        }
+
+        if (sourceAccount.equals(destinationAccount)) {
+            throw new InvalidTransactionException("Source and destination accounts cannot be the same");
+        }
+
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidTransactionException("Amount must be greater than zero");
+        }
+
+        if (bankId == null || bankId.isBlank()) {
+            throw new InvalidTransactionException("Bank ID cannot be null or empty");
+        }
 
         LocalDateTime now = LocalDateTime.now();
         return new Transaction(

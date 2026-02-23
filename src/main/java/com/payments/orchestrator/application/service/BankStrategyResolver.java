@@ -1,5 +1,7 @@
 package com.payments.orchestrator.application.service;
 
+import com.payments.orchestrator.application.exception.BankNotFoundException;
+import com.payments.orchestrator.application.exception.BankStrategyResolutionException;
 import com.payments.orchestrator.domain.port.BankStrategy;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +24,9 @@ public class BankStrategyResolver {
                         BankStrategy::getBankCode,
                         Function.identity(),
                         (a, b) -> {
-                            throw new IllegalStateException("Duplicate BankStrategy for code: " + a.getBankCode());
+                            throw new BankStrategyResolutionException(
+                                    "Duplicate BankStrategy found for bank code: " + a.getBankCode()
+                            );
                         }
                 ));
     }
@@ -30,7 +34,9 @@ public class BankStrategyResolver {
     public BankStrategy resolve(String bankCode) {
         BankStrategy strategy = strategies.get(bankCode);
         if (strategy == null) {
-            throw new IllegalArgumentException("Bank strategy not found for: " + bankCode);
+            throw new BankNotFoundException(
+                    "No strategy registered for bank code: " + bankCode
+            );
         }
         return strategy;
     }

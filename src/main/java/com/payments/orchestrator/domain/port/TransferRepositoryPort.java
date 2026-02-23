@@ -11,5 +11,4 @@ public interface TransferRepositoryPort {
 
     Mono<Transaction> updateStatus(Transaction transaction);
 
-    //Optional<Transaction> findById(UUID id);
 }

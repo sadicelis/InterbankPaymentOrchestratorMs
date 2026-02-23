@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payment-orchestrator
+  labels:
+    name: payment-orchestrator
+    environment: production

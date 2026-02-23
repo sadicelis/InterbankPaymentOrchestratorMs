@@ -7,6 +7,7 @@ import com.payments.orchestrator.infrastructure.adapter.out.bankstrategy.dto.Ban
 import com.payments.orchestrator.infrastructure.adapter.out.bankstrategy.mapper.BankRequestMapper;
 import com.payments.orchestrator.infrastructure.config.BankClientProperties;
 import com.payments.orchestrator.infrastructure.config.constants.BankCodesConstants;
+import com.payments.orchestrator.infrastructure.exception.ExternalServiceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -25,7 +26,9 @@ public class Bank1Strategy implements BankStrategy {
 
         var clientConfig = properties.getClients().get(BankCodesConstants.BANK_1);
         if (clientConfig == null) {
-            throw new IllegalStateException("Configuration for BANK_1 not found in properties");
+            throw new ExternalServiceException(
+                    "Configuration for BANK_1 not found in application properties"
+            );
         }
 
         this.webClient = webClientBuilder

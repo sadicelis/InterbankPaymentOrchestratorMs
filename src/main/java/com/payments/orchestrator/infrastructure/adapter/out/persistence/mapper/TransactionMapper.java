@@ -1,7 +1,5 @@
 package com.payments.orchestrator.infrastructure.adapter.out.persistence.mapper;
 
-import java.time.LocalDateTime;
-
 import org.springframework.stereotype.Component;
 
 import com.payments.orchestrator.domain.model.aggregate.Transaction;
@@ -12,7 +10,7 @@ import com.payments.orchestrator.infrastructure.adapter.out.persistence.Entities
 @Component
 public class TransactionMapper {
 
-    public static Transaction toDomain(TransactionEntity entity) {
+    public Transaction toDomain(TransactionEntity entity) {
         if (entity == null) {
             return null;
         }
@@ -32,7 +30,7 @@ public class TransactionMapper {
         );
     }
 
-    public static TransactionEntity toEntity(Transaction domain, BankEntity bankEntity) {
+    public TransactionEntity toEntity(Transaction domain, BankEntity bankEntity) {
         if (domain == null) {
             return null;
         }
