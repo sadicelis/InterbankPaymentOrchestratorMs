@@ -1,6 +1,7 @@
 package com.payments.orchestrator.infrastructure.adapter.in.rest.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.payments.orchestrator.infrastructure.config.constants.ResponseStatusConstants;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,8 +34,8 @@ public class ApiResponse<T> {
 
     public static <T> ApiResponse<T> success(T data, String message) {
         return ApiResponse.<T>builder()
-                .status("SUCCESS")
-                .code("SUCCESS")
+                .status(ResponseStatusConstants.STATUS_SUCCESS)
+                .code(ResponseStatusConstants.STATUS_SUCCESS)
                 .message(message)
                 .data(data)
                 .timestamp(LocalDateTime.now())
@@ -47,7 +48,7 @@ public class ApiResponse<T> {
 
     public static <T> ApiResponse<T> error(String code, String message, ErrorDetails errorDetails) {
         return ApiResponse.<T>builder()
-                .status("ERROR")
+                .status(ResponseStatusConstants.STATUS_ERROR)
                 .code(code)
                 .message(message)
                 .error(errorDetails)

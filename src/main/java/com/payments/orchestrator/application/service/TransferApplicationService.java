@@ -7,6 +7,8 @@ import com.payments.orchestrator.application.exception.ApplicationException;
 import com.payments.orchestrator.infrastructure.exception.InfrastructureException;
 import com.payments.orchestrator.domain.exception.DomainException;
 import com.payments.orchestrator.application.exception.TransferProcessingException;
+import com.payments.orchestrator.infrastructure.config.constants.BankResponseConstants;
+import com.payments.orchestrator.infrastructure.config.constants.DefaultValuesConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -37,7 +39,7 @@ public class TransferApplicationService {
                 try {
                     var strategy = strategyResolver.resolve(saved.getBankId());
                     return strategy.sendTransfer(saved)
-                        .timeout(Duration.ofSeconds(3))
+                        .timeout(Duration.ofSeconds(BankResponseConstants.BANK_REQUEST_TIMEOUT_SECONDS))
                         .flatMap(result -> {
                             if (result.isSuccess()) {
                                 saved.markSuccessful();
@@ -85,12 +87,12 @@ public class TransferApplicationService {
     }
 
     private String buildFailureMessage(BankTransferResult result) {
-        String code = result.getCode() == null ? "UNKNOWN" : result.getCode();
-        String msg = result.getMessage() == null ? "Bank returned failure" : result.getMessage();
+        String code = result.getCode() == null ? DefaultValuesConstants.DEFAULT_UNKNOWN : result.getCode();
+        String msg = result.getMessage() == null ? DefaultValuesConstants.DEFAULT_BANK_ERROR_MESSAGE : result.getMessage();
         return code + " - " + msg;
     }
 
     private String normalizeError(Throwable ex) {
-        return ex.getClass().getSimpleName() + ": " + (ex.getMessage() == null ? "N/A" : ex.getMessage());
+        return ex.getClass().getSimpleName() + ": " + (ex.getMessage() == null ? DefaultValuesConstants.DEFAULT_NOT_AVAILABLE : ex.getMessage());
     }
 }

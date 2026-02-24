@@ -5,6 +5,9 @@ import com.payments.orchestrator.domain.model.aggregate.Transaction;
 import com.payments.orchestrator.infrastructure.adapter.in.rest.dto.TransferRequestDto;
 import com.payments.orchestrator.infrastructure.adapter.in.rest.dto.TransferResponseDto;
 import com.payments.orchestrator.infrastructure.adapter.in.rest.dto.ApiResponse;
+import com.payments.orchestrator.infrastructure.config.constants.ApiPathConstants;
+import com.payments.orchestrator.infrastructure.config.constants.ResponseStatusConstants;
+import com.payments.orchestrator.infrastructure.config.constants.DefaultValuesConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +17,7 @@ import reactor.core.publisher.Mono;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/v1/transfers")
+@RequestMapping(ApiPathConstants.TRANSFERS_BASE)
 @RequiredArgsConstructor
 public class TransferController {
 
@@ -41,13 +44,13 @@ public class TransferController {
                             .sourceAccount(request.getSourceAccount())
                             .destinationAccount(request.getDestinationAccount())
                             .amount(request.getAmount())
-                            .status("PENDING")
-                            .statusMessage("Transfer registered and pending processing")
+                            .status(ResponseStatusConstants.TXN_STATUS_PENDING)
+                            .statusMessage(DefaultValuesConstants.MSG_TRANSFER_REGISTERED)
                             .build();
 
                     ApiResponse<TransferResponseDto> apiResponse = ApiResponse.success(
                             response,
-                            "Transfer request processed successfully"
+                            DefaultValuesConstants.MSG_TRANSFER_PROCESSED
                     );
                     return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
                 });

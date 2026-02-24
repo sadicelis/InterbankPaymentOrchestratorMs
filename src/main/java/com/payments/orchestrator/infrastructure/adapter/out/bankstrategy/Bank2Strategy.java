@@ -6,6 +6,7 @@ import com.payments.orchestrator.domain.port.BankStrategy;
 import com.payments.orchestrator.infrastructure.adapter.out.bankstrategy.mapper.BankRequestMapper;
 import com.payments.orchestrator.infrastructure.config.BankClientProperties;
 import com.payments.orchestrator.infrastructure.config.constants.BankCodesConstants;
+import com.payments.orchestrator.infrastructure.config.constants.BankResponseConstants;
 import com.payments.orchestrator.infrastructure.exception.ExternalServiceException;
 
 import org.springframework.stereotype.Component;
@@ -41,8 +42,8 @@ public class Bank2Strategy implements BankStrategy {
     @Override
     public Mono<BankTransferResult> sendTransfer(Transaction request) {
         return Mono.fromCallable(() -> {
-            Thread.sleep(200);
-            return new BankTransferResult(true, "00", "Transfer successful", "txn_123");
+            Thread.sleep(BankResponseConstants.BANK_MOCK_DELAY_MS);
+            return new BankTransferResult(true, BankResponseConstants.BANK_RESPONSE_SUCCESS_CODE, BankResponseConstants.BANK_MSG_SUCCESS, BankResponseConstants.BANK_MOCK_TXN_ID);
         }).subscribeOn(Schedulers.boundedElastic());
     }
 }

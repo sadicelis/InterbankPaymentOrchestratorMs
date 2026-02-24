@@ -1,0 +1,646 @@
+openapi: 3.0.3
+info:
+  title: Interbank Payment Orchestrator API
+  description: |
+    API para orquestación segura de transferencias interbancarias.
+    
+    El servicio gestiona transferencias entre diferentes bancos con:
+    - **Validación de negocio**: Verificación de fondos, cuentas válidas
+    - **Resilencia**: Circuit breaker, retry policies, timeout handling
+    - **Transaccionalidad**: Atomicidad en persistencia de transferencias
+    - **Auditoría**: Trazabilidad completa de todas las operaciones
+    
+    ## Patrones de Arquitectura
+    - **Clean Architecture**: Capas aisladas (presentation, application, domain, infrastructure)
+    - **Hexagonal Pattern**: Ports y adapters para desacoplamiento
+    - **Domain-Driven Design**: Lógica de negocio centralizada en agregados
+  version: 1.0.0
+  contact:
+    name: Payment Systems Team - Softka
+    url: https://softka.com
+    email: payments@softka.com
+  license:
+    name: Proprietary
+    url: https://softka.com/license
+
+servers:
+  - url: http://localhost:8080
+    description: Desarrollo Local
+    variables:
+      port:
+        default: "8080"
+
+  - url: https://api-staging.interbank.softka.com
+    description: Staging (Pre-producción)
+    variables:
+      port:
+        default: "443"
+
+  - url: https://api.interbank.softka.com
+    description: Producción
+    variables:
+      port:
+        default: "443"
+
+tags:
+  - name: Health
+    description: Endpoints de salud y disponibilidad del servicio
+  
+  - name: Transfers
+    description: |
+      Gestión de transferencias interbancarias.
+      
+      Flujo típico:
+      1. Cliente envía POST /api/v1/transfers con detalles de transferencia
+      2. Sistema valida datos de negocio (fondos, cuentas, banco válido)
+      3. Sistema persiste transacción en estado PENDING
+      4. Sistema intenta transferencia con banco externo (con resilencia)
+      5. Respuesta inmediata: ID de transacción para tracking
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Verificar disponibilidad del servicio
+      description: |
+        Endpoint simple para verificar que el servicio está disponible y respondiendo.
+        Útil para health checks en Kubernetes, load balancers, monitoring.
+      operationId: checkHealth
+      responses:
+        '200':
+          description: Servicio disponible
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                success:
+                  value: "Orquestador de Pagos en línea"
+
+  /api/v1/transfers:
+    post:
+      tags:
+        - Transfers
+      summary: Crear nueva transferencia interbancaria
+      description: |
+        Procesa una solicitud de transferencia entre cuentas bancarias.
+        
+        ### Flujo de Procesamiento
+        1. **Validación de entrada** (DTO): Verificar que todos los campos requeridos estén presentes y sean válidos
+        2. **Validación de negocio** (Domain): 
+           - Verificar monto positivo
+           - Verificar cuentas diferentes
+           - Verificar banco existe
+        3. **Persistencia**: Guardar transacción con estado PENDING
+        4. **Orquestación**: Intentar transferencia con banco externo
+           - Incluyendo reintentos y circuit breaker
+           - Timeout: 10 segundos por intento
+        5. **Respuesta**: Retornar ID de transacción para tracking
+        
+        ### Códigos de Error
+        | Código | Significado | Acción |
+        |--------|-----------|--------|
+        | ERR_VALIDATION_FAILED | Datos inválidos | Revisar estructura del request |
+        | ERR_INVALID_TRANSACTION | Validación de negocio falló | Revisar montos y cuentas |
+        | ERR_BANK_NOT_FOUND | Banco no existe | Usar código de banco válido |
+        | ERR_PERSISTENCE | Error en base datos | Reintentar, contactar ops |
+        | ERR_BANK_COMMUNICATION | Banco no responde | Circuit breaker abierto |
+        | ERR_TIMEOUT | Banco tardó > 10s | Reintentar después |
+        | ERR_INTERNAL_SERVER_ERROR | Error inesperado | Contactar soporte |
+      operationId: createTransfer
+      requestBody:
+        required: true
+        description: Solicitud de transferencia interbancaria
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+            examples:
+              success:
+                summary: Transferencia válida
+                value:
+                  reference: "TRANSFER_2026_001"
+                  sourceAccount: "1234567890"
+                  destinationAccount: "0987654321"
+                  amount: 1500.00
+                  bankCode: "BANK_1"
+              
+              largeAmount:
+                summary: Transferencia de monto grande
+                value:
+                  reference: "TRANSFER_2026_002"
+                  sourceAccount: "9876543210"
+                  destinationAccount: "1234567890"
+                  amount: 100000.00
+                  bankCode: "BANK_2"
+
+      responses:
+        '201':
+          description: Transferencia creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_TransferResponse'
+              examples:
+                success:
+                  summary: Respuesta exitosa
+                  value:
+                    status: "SUCCESS"
+                    code: "SUCCESS"
+                    message: "Transfer request processed successfully"
+                    data:
+                      transactionId: "550e8400-e29b-41d4-a716-446655440000"
+                      bankCode: "BANK_1"
+                      sourceAccount: "1234567890"
+                      destinationAccount: "0987654321"
+                      amount: 1500.00
+                      status: "PENDING"
+                      statusMessage: "Transfer registered and pending processing"
+                    timestamp: "2026-02-23T14:30:45.123456"
+
+        '400':
+          description: Solicitud inválida (validación de entrada falló)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_Error'
+              examples:
+                missingField:
+                  summary: Campo requerido faltante
+                  value:
+                    status: "ERROR"
+                    code: "ERR_VALIDATION_FAILED"
+                    message: "Validation failed: reference cannot be blank"
+                    error:
+                      path: "/api/v1/transfers"
+                      method: "POST"
+                      timestamp: 1708686645123
+                      detail: "reference cannot be blank"
+                      exceptionType: "ConstraintViolationException"
+                      validationErrors:
+                        reference: "must not be blank"
+                
+                invalidAmount:
+                  summary: Monto inválido (no positivo)
+                  value:
+                    status: "ERROR"
+                    code: "ERR_VALIDATION_FAILED"
+                    message: "Validation failed: amount must be greater than 0"
+                    error:
+                      path: "/api/v1/transfers"
+                      method: "POST"
+                      timestamp: 1708686645123
+                      detail: "amount must be greater than 0"
+                      exceptionType: "ConstraintViolationException"
+
+        '422':
+          description: Transferencia inválida según reglas de negocio
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_Error'
+              examples:
+                invalidTransaction:
+                  summary: Validación de negocio falló
+                  value:
+                    status: "ERROR"
+                    code: "ERR_INVALID_TRANSACTION"
+                    message: "Source and destination accounts must be different"
+                    error:
+                      path: "/api/v1/transfers"
+                      method: "POST"
+                      timestamp: 1708686645123
+                      detail: "Accounts must be different"
+                      exceptionType: "TransactionException"
+                
+                insufficientFunds:
+                  summary: Fondos insuficientes
+                  value:
+                    status: "ERROR"
+                    code: "ERR_INSUFFICIENT_FUNDS"
+                    message: "Account does not have sufficient balance"
+                    error:
+                      path: "/api/v1/transfers"
+                      method: "POST"
+                      timestamp: 1708686645123
+                      detail: "Required: 5000.00, Available: 2500.00"
+                      exceptionType: "TransactionException"
+                
+                bankNotFound:
+                  summary: Banco no existe
+                  value:
+                    status: "ERROR"
+                    code: "ERR_BANK_NOT_FOUND"
+                    message: "Bank INVALID_BANK does not exist"
+                    error:
+                      path: "/api/v1/transfers"
+                      method: "POST"
+                      timestamp: 1708686645123
+                      detail: "No bank found with code INVALID_BANK"
+                      exceptionType: "ApplicationException"
+
+        '503':
+          description: Banco externo no disponible o timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_Error'
+              examples:
+                bankDown:
+                  summary: Banco no responde (Circuit Breaker abierto)
+                  value:
+                    status: "ERROR"
+                    code: "ERR_BANK_COMMUNICATION"
+                    message: "Bank service temporarily unavailable. Please retry after some time."
+                    error:
+                      path: "/api/v1/transfers"
+                      method: "POST"
+                      timestamp: 1708686645123
+                      detail: "Circuit breaker is OPEN for bank BANK_2"
+                      exceptionType: "BankCommunicationException"
+                
+                bankTimeout:
+                  summary: Banco respondió después del timeout
+                  value:
+                    status: "ERROR"
+                    code: "ERR_TIMEOUT"
+                    message: "Bank request exceeded maximum allowed time (10s)"
+                    error:
+                      path: "/api/v1/transfers"
+                      method: "POST"
+                      timestamp: 1708686645123
+                      detail: "Timeout after 10000ms waiting for bank response"
+                      exceptionType: "BankTimeoutException"
+
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse_Error'
+              examples:
+                databaseError:
+                  summary: Error en persistencia
+                  value:
+                    status: "ERROR"
+                    code: "ERR_PERSISTENCE"
+                    message: "Database operation failed. Please contact support."
+                    error:
+                      path: "/api/v1/transfers"
+                      method: "POST"
+                      timestamp: 1708686645123
+                      detail: "Connection timeout: Cannot acquire a connection, pool exhausted"
+                      exceptionType: "PersistenceException"
+                
+                internalError:
+                  summary: Error inesperado
+                  value:
+                    status: "ERROR"
+                    code: "ERR_INTERNAL_SERVER_ERROR"
+                    message: "An unexpected error occurred. Please contact the support team."
+                    error:
+                      path: "/api/v1/transfers"
+                      method: "POST"
+                      timestamp: 1708686645123
+                      detail: "NullPointerException in transaction processing"
+                      exceptionType: "NullPointerException"
+
+components:
+  schemas:
+    # ============ REQUEST ============
+    TransferRequest:
+      type: object
+      required:
+        - reference
+        - sourceAccount
+        - destinationAccount
+        - amount
+        - bankCode
+      properties:
+        reference:
+          type: string
+          description: |
+            Identificador único de la transferencia (proporcionado por cliente).
+            Se usa para idempotencia: si se reintenta con la misma referencia,
+            obtiene el mismo resultado sin duplicados.
+            
+            **Validaciones**:
+            - No puede ser vacío
+            - Máximo 50 caracteres
+            - Debe ser único en el sistema
+          minLength: 1
+          maxLength: 50
+          example: "TRANSFER_2026_001"
+          pattern: "^[A-Z0-9_-]+$"
+
+        sourceAccount:
+          type: string
+          description: |
+            Número de cuenta origen (de donde sale dinero).
+            
+            **Validaciones**:
+            - No puede ser vacío
+            - Formato: típicamente 10-20 dígitos (varía por banco)
+            - No puede ser igual a destinationAccount
+          minLength: 1
+          maxLength: 20
+          example: "1234567890"
+
+        destinationAccount:
+          type: string
+          description: |
+            Número de cuenta destino (a donde llega dinero).
+            
+            **Validaciones**:
+            - No puede ser vacío
+            - Formato: típicamente 10-20 dígitos
+            - No puede ser igual a sourceAccount
+          minLength: 1
+          maxLength: 20
+          example: "0987654321"
+
+        amount:
+          type: number
+          format: decimal
+          description: |
+            Monto a transferir en unidad monetaria (ej: USD, COP).
+            
+            **Validaciones**:
+            - Debe ser > 0 (positivo)
+            - Máximo 2 decimales
+            - No puede exceder límites del banco (típicamente $999,999.99)
+          minimum: 0.01
+          maximum: 999999.99
+          example: 1500.00
+
+        bankCode:
+          type: string
+          description: |
+            Código del banco al cual transferir fondos.
+            
+            **Valores válidos** (ejemplos):
+            - BANK_1: Banco A
+            - BANK_2: Banco B
+            - BANK_3: Banco C
+            
+            **Validaciones**:
+            - Debe corresponder a banco registrado en el sistema
+            - No puede ser vacío
+          minLength: 1
+          maxLength: 20
+          example: "BANK_1"
+
+    # ============ RESPONSE ============
+    TransferResponse:
+      type: object
+      properties:
+        transactionId:
+          type: string
+          format: uuid
+          description: |
+            ID único de la transacción generado por el sistema.
+            Se usa para trackear el estado de la transferencia.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+        externalReference:
+          type: string
+          description: |
+            Referencia externa retornada por el banco destino.
+            Permite coordinar con el banco para reconciliación.
+            Se asigna después de que el banco procesa la transferencia.
+          nullable: true
+          example: "BK_REF_12345"
+
+        bankCode:
+          type: string
+          description: Código del banco destino (eco del request)
+          example: "BANK_1"
+
+        sourceAccount:
+          type: string
+          description: Cuenta origen (eco del request)
+          example: "1234567890"
+
+        destinationAccount:
+          type: string
+          description: Cuenta destino (eco del request)
+          example: "0987654321"
+
+        amount:
+          type: number
+          format: decimal
+          description: Monto transferido (eco del request)
+          example: 1500.00
+
+        status:
+          type: string
+          description: |
+            Estado actual de la transferencia.
+            
+            **Estados posibles**:
+            - **PENDING**: Transferencia registrada, esperando procesamiento
+            - **PROCESSING**: En curso con el banco externo
+            - **COMPLETED**: Exitosa, fondos transferidos
+            - **FAILED**: Falló, fondos no transferidos
+            - **ERROR**: Error crítico, estado indeterminado
+          enum:
+            - PENDING
+            - PROCESSING
+            - COMPLETED
+            - FAILED
+            - ERROR
+          example: "PENDING"
+
+        statusMessage:
+          type: string
+          description: Mensaje descriptivo del estado actual
+          example: "Transfer registered and pending processing"
+
+        createdAt:
+          type: string
+          format: date-time
+          description: Marca de tiempo de creación de la transacción
+          example: "2026-02-23T14:30:45.123456"
+
+        updatedAt:
+          type: string
+          format: date-time
+          description: Marca de tiempo de última actualización
+          example: "2026-02-23T14:35:22.654321"
+          nullable: true
+
+    # ============ ERROR DETAILS ============
+    ErrorDetails:
+      type: object
+      description: Información detallada de errores (incluida en respuestas 4xx/5xx)
+      properties:
+        path:
+          type: string
+          description: Ruta del endpoint donde ocurrió el error
+          example: "/api/v1/transfers"
+
+        method:
+          type: string
+          description: Método HTTP utilizado
+          enum:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+            - PATCH
+          example: "POST"
+
+        timestamp:
+          type: integer
+          format: int64
+          description: Marca de tiempo Unix en milisegundos cuando ocurrió el error
+          example: 1708686645123
+
+        detail:
+          type: string
+          description: Descripción técnica del error (para debugging)
+          example: "Connection timeout: database pool exhausted"
+
+        exceptionType:
+          type: string
+          description: Clase de excepción de Java que causó el error
+          example: "PersistenceException"
+
+        validationErrors:
+          type: object
+          description: |
+            Mapa de errores de validación (solo si el error es de validación).
+            Clave = nombre del campo, Valor = descripción del error.
+          additionalProperties:
+            type: string
+          example:
+            reference: "must not be blank"
+            amount: "must be greater than 0"
+
+    # ============ API RESPONSE ENVELOPE ============
+    ApiResponse_TransferResponse:
+      type: object
+      description: |
+        Envolvente estándar para respuestas exitosas (HTTP 201).
+        Todos los endpoints retornan este formato para mantener consistencia.
+      required:
+        - status
+        - code
+        - message
+      properties:
+        status:
+          type: string
+          description: Estado de la operación
+          enum:
+            - SUCCESS
+            - ERROR
+          example: "SUCCESS"
+
+        code:
+          type: string
+          description: |
+            Código único identifier la operación.
+            - SUCCESS: Operación exitosa
+            - ERR_*: Ver tabla de códigos de error
+          example: "SUCCESS"
+
+        message:
+          type: string
+          description: Mensaje legible para usuarios (en inglés)
+          example: "Transfer request processed successfully"
+
+        data:
+          $ref: '#/components/schemas/TransferResponse'
+          description: Datos de respuesta (solo si éxito)
+
+        error:
+          $ref: '#/components/schemas/ErrorDetails'
+          description: Detalles del error (solo si error)
+
+        timestamp:
+          type: string
+          format: date-time
+          description: Marca de tiempo de la operación
+          example: "2026-02-23T14:30:45.123456"
+
+        correlationId:
+          type: string
+          format: uuid
+          description: |
+            ID para correlacionar logs entre cliente y servidor.
+            Útil para debugging distribuido.
+          nullable: true
+          example: "123e4567-e89b-12d3-a456-426614174000"
+
+    ApiResponse_Error:
+      type: object
+      description: |
+        Envolvente estándar para respuestas con error (HTTP 4xx/5xx).
+        Los errores siempre incluyen ErrorDetails para debugging.
+      required:
+        - status
+        - code
+        - message
+        - error
+      properties:
+        status:
+          type: string
+          enum:
+            - ERROR
+          example: "ERROR"
+
+        code:
+          type: string
+          description: Código de error
+          enum:
+            - ERR_VALIDATION_FAILED
+            - ERR_INVALID_TRANSACTION
+            - ERR_INSUFFICIENT_FUNDS
+            - ERR_BANK_NOT_FOUND
+            - ERR_PERSISTENCE
+            - ERR_BANK_COMMUNICATION
+            - ERR_TIMEOUT
+            - ERR_INTERNAL_SERVER_ERROR
+          example: "ERR_INVALID_TRANSACTION"
+
+        message:
+          type: string
+          description: Mensaje de error legible
+          example: "Source and destination accounts must be different"
+
+        error:
+          $ref: '#/components/schemas/ErrorDetails'
+
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-02-23T14:30:45.123456"
+
+        correlationId:
+          type: string
+          format: uuid
+          nullable: true
+
+  # ============ SECURITY (futuro) ============
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      name: X-API-Key
+      in: header
+      description: |
+        API Key para autenticación (será implementado en v2.0).
+        Contactar a: security@softka.com
+
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT Bearer token para autenticación (será implementado en v2.0).
+        Obtener token en: /auth/login
+
+# ============ SEGURIDAD (futuro) ============
+# security:
+#   - ApiKeyAuth: []
+#   - BearerAuth: []

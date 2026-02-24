@@ -14,7 +14,7 @@ class ErrorConstantsTest {
         assertThat(ErrorCodesConstants.ERR_INVALID_TRANSACTION).isNotNull();
         assertThat(ErrorCodesConstants.ERR_BANK_NOT_FOUND).isNotNull();
         assertThat(ErrorCodesConstants.ERR_TIMEOUT).isNotNull();
-        assertThat(ErrorCodesConstants.ERR_INTERNAL).isNotNull();
+        assertThat(ErrorCodesConstants.ERR_INTERNAL_SERVER_ERROR).isNotNull();
     }
 
     @Test
@@ -33,7 +33,7 @@ class ErrorConstantsTest {
                 .startsWith("ERR_");
         assertThat(ErrorCodesConstants.ERR_INSUFFICIENT_FUNDS)
                 .startsWith("ERR_");
-        assertThat(ErrorCodesConstants.ERR_DB_ERROR)
+        assertThat(ErrorCodesConstants.ERR_PERSISTENCE)
                 .startsWith("ERR_");
     }
 

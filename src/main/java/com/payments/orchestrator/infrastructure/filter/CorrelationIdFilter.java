@@ -1,5 +1,6 @@
 package com.payments.orchestrator.infrastructure.filter;
 
+import com.payments.orchestrator.infrastructure.config.constants.HttpHeaderConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
@@ -15,16 +16,14 @@ import java.util.UUID;
 @Component
 public class CorrelationIdFilter implements WebFilter {
 
-    private static final String HEADER = "X-Correlation-Id";
-
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
         String correlationId = Optional
-                .ofNullable(exchange.getRequest().getHeaders().getFirst(HEADER))
+                .ofNullable(exchange.getRequest().getHeaders().getFirst(HttpHeaderConstants.CORRELATION_ID_HEADER))
                 .orElse(UUID.randomUUID().toString());
 
-        MDC.put(HEADER, correlationId);
+        MDC.put(HttpHeaderConstants.CORRELATION_ID_HEADER, correlationId);
 
         return chain.filter(exchange)
                 .doFinally(signalType -> MDC.clear());
