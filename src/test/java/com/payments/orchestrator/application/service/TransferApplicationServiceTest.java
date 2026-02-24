@@ -14,6 +14,7 @@ import reactor.test.StepVerifier;
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class TransferApplicationServiceTest {
@@ -40,15 +41,13 @@ class TransferApplicationServiceTest {
         when(resolver.resolve("BANK_1")).thenReturn(strategy);
 
         when(strategy.sendTransfer(any())).thenReturn(Mono.just(
-                new BankTransferResult(true, "00", "OK", "EXT-123")
-        ));
+                new BankTransferResult(true, "00", "OK", "EXT-123")));
 
         when(repository.updateStatus(any())).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
 
         StepVerifier.create(service.process(tx))
                 .assertNext(id -> assertEquals(tx.getId(), id))
                 .verifyComplete();
-
 
         verify(repository, times(1)).savePending(any());
         verify(repository, times(1)).updateStatus(any());
@@ -69,8 +68,7 @@ class TransferApplicationServiceTest {
         when(resolver.resolve("BANK_1")).thenReturn(strategy);
 
         when(strategy.sendTransfer(any())).thenReturn(Mono.just(
-                new BankTransferResult(false, "51", "Insufficient funds", null)
-        ));
+                new BankTransferResult(false, "51", "Insufficient funds", null)));
 
         when(repository.updateStatus(any())).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
 
@@ -108,7 +106,8 @@ class TransferApplicationServiceTest {
         Transaction updated = captor.getValue();
         assertEquals(TransactionStatus.FAILED, updated.getStatus());
         assertNotNull(updated.getErrorMessage());
-        assertTrue(updated.getErrorMessage().contains("RuntimeException") || updated.getErrorMessage().contains("timeout"));
+        assertTrue(updated.getErrorMessage().contains("RuntimeException")
+                || updated.getErrorMessage().contains("timeout"));
     }
 
     @Test
@@ -118,8 +117,7 @@ class TransferApplicationServiceTest {
         when(repository.savePending(any())).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
         when(resolver.resolve("BANK_1")).thenReturn(strategy);
         when(strategy.sendTransfer(any())).thenReturn(Mono.just(
-                new BankTransferResult(true, "00", "OK", "EXT-999")
-        ));
+                new BankTransferResult(true, "00", "OK", "EXT-999")));
         when(repository.updateStatus(any())).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
 
         StepVerifier.create(service.process(tx))
@@ -128,9 +126,35 @@ class TransferApplicationServiceTest {
 
         ArgumentCaptor<Transaction> captor = ArgumentCaptor.forClass(Transaction.class);
         verify(repository).updateStatus(captor.capture());
-        
+
         Transaction updated = captor.getValue();
         assertEquals(TransactionStatus.SUCCESSFUL, updated.getStatus());
+    }
+
+    @Test
+    void process_withSmallAmount_shouldSucceed() {
+        Transaction tx = Transaction.create("ref-small", "A", "B", new BigDecimal("0.01"), "BANK_1");
+
+        when(repository.savePending(any())).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
+        when(resolver.resolve("BANK_1")).thenReturn(strategy);
+        when(strategy.sendTransfer(any())).thenReturn(Mono.just(
+                new BankTransferResult(true, "00", "OK", "EXT-001")));
+        when(repository.updateStatus(any())).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
+
+        StepVerifier.create(service.process(tx))
+                .assertNext(id -> assertEquals(tx.getId(), id))
+                .verifyComplete();
+
+        ArgumentCaptor<Transaction> captor = ArgumentCaptor.forClass(Transaction.class);
+        verify(repository, times(1)).updateStatus(captor.capture());
+
+        Transaction updated = captor.getValue();
+        assertEquals(TransactionStatus.SUCCESSFUL, updated.getStatus());
+        assertNull(updated.getErrorMessage());
+
+        verify(repository, times(1)).savePending(any());
+        verify(resolver, times(1)).resolve("BANK_1");
+        verify(strategy, times(1)).sendTransfer(any());
     }
 
     @Test
@@ -140,8 +164,7 @@ class TransferApplicationServiceTest {
         when(repository.savePending(any())).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
         when(resolver.resolve("BANK_2")).thenReturn(strategy);
         when(strategy.sendTransfer(any())).thenReturn(Mono.just(
-                new BankTransferResult(true, "00", "OK", "TXN-XYZ")
-        ));
+                new BankTransferResult(true, "00", "OK", "TXN-XYZ")));
         when(repository.updateStatus(any())).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
 
         StepVerifier.create(service.process(tx))
@@ -150,7 +173,7 @@ class TransferApplicationServiceTest {
 
         ArgumentCaptor<Transaction> bankCaptor = ArgumentCaptor.forClass(Transaction.class);
         verify(strategy).sendTransfer(bankCaptor.capture());
-        
+
         Transaction capturedTx = bankCaptor.getValue();
         assertEquals("SRC", capturedTx.getSourceAccount());
         assertEquals("DST", capturedTx.getDestinationAccount());
@@ -164,8 +187,7 @@ class TransferApplicationServiceTest {
         when(repository.savePending(any())).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
         when(resolver.resolve("BANK_1")).thenReturn(strategy);
         when(strategy.sendTransfer(any())).thenReturn(Mono.just(
-                new BankTransferResult(false, "99", "Generic error", null)
-        ));
+                new BankTransferResult(false, "99", "Generic error", null)));
         when(repository.updateStatus(any())).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
 
         StepVerifier.create(service.process(tx))
