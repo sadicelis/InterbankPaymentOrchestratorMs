@@ -1,0 +1,117 @@
+{
+  "info": {
+    "_postman_id": "3fa6e196-8f8b-48b3-88bf-5b43d59cf5ad",
+    "name": "InterbankPaymentOrchestratorMs",
+    "description": "Postman collection for ms-capacidad microservice (endpoints for capacidades)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "43212249",
+    "_collection_link": "https://go.postman.co/collection/43212249-3fa6e196-8f8b-48b3-88bf-5b43d59cf5ad?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Create Transfer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reference\": \"REF-027\",\n  \"sourceAccount\": \"1423421\",\n  \"destinationAccount\": \"643227890\",\n  \"amount\": 10422.00,\n  \"bankCode\": \"BANCO_1\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/v1/transfers",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "transfers"
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "200 - Created Capacidad",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{...}"
+            },
+            "url": {
+              "raw": ""
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "Text",
+          "header": [],
+          "cookie": [],
+          "body": "{\n  \"id\": 1,\n  \"nombre\": \"Desarrollo Backend\",\n  \"descripcion\": \"Desarrollo de aplicaciones del lado del servidor\",\n  \"tecnologias\": [\n    { \"id\": 1, \"nombre\": \"Java\" },\n    { \"id\": 2, \"nombre\": \"Spring\" },\n    { \"id\": 3, \"nombre\": \"Angular\" }\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/health",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "health"
+          ]
+        },
+        "description": "Replace :id with the capacidad id"
+      },
+      "response": [
+        {
+          "name": "200 - Get Capacidad",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": ""
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "Text",
+          "header": [],
+          "cookie": [],
+          "body": "{\n  \"id\": 1,\n  \"nombre\": \"Desarrollo Backend\",\n  \"descripcion\": \"Desarrollo de aplicaciones del lado del servidor\",\n  \"tecnologias\": [ { \"id\":1, \"nombre\":\"Java\" } ]\n}"
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

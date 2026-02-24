@@ -98,7 +98,7 @@ curl -X POST http://localhost:8080/v1/transfers \
 
 
 ```
-[Swagger](./openapi.yml) 
+[Swagger](./openapi.yml)  |  [Collection postman test](InterbankPaymentOrchestratorMs.postman_collection.json)
 ---
 
 ## 📊 Technology Stack

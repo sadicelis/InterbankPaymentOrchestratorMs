@@ -2,7 +2,7 @@
 
 ---
 
-## 📊 Solution flowchart
+## 📊 Solution Flowchart
 
 ![alt text](<src/main/resources/images/Solution flowchart.png>)
 
