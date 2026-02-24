@@ -280,7 +280,7 @@ public class GlobalExceptionHandler {
                 .build();
 
         ApiResponse<?> response = ApiResponse.error(
-                ErrorCodesConstants.ERR_INTERNAL,
+                ErrorCodesConstants.ERR_INTERNAL_SERVER_ERROR,
                 ErrorMessagesConstants.MSG_INTERNAL_ERROR,
                 errorDetails
         );

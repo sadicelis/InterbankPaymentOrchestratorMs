@@ -80,7 +80,7 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getCode()).isEqualTo("ERR_BANK_UNAVAILABLE");
+        assertThat(response.getBody().getCode()).isEqualTo("ERR_BANK_COMMUNICATION");
     }
 
     @Test
@@ -93,7 +93,7 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getCode()).isEqualTo("ERR_DB_ERROR");
+        assertThat(response.getBody().getCode()).isEqualTo("ERR_PERSISTENCE");
     }
 
     @Test
@@ -119,6 +119,6 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getCode()).isEqualTo("ERR_INTERNAL");
+        assertThat(response.getBody().getCode()).isEqualTo("ERR_INTERNAL_SERVER_ERROR");
     }
 }
