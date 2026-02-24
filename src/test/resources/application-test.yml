@@ -1,0 +1,55 @@
+spring:
+  profiles:
+    active: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+  flyway:
+    enabled: false
+
+server:
+  port: 0
+
+bank:
+  clients:
+    BANCO_1:
+      base-url: "http://localhost:9090/mock/bank1"
+    BANCO_2:
+      base-url: "http://localhost:9090/mock/bank2"
+    bank1:
+      base-url: "http://localhost:9090/mock/bank1"
+    bank2:
+      base-url: "http://localhost:9090/mock/bank2"
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      bankService:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 10s
+  retry:
+    instances:
+      bankService:
+        maxAttempts: 3
+        waitDuration: 500ms
+
+logging:
+  level:
+    root: WARN
+    com.payments.orchestrator: INFO

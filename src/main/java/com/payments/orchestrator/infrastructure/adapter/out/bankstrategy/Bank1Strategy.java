@@ -7,6 +7,8 @@ import com.payments.orchestrator.infrastructure.adapter.out.bankstrategy.dto.Ban
 import com.payments.orchestrator.infrastructure.adapter.out.bankstrategy.mapper.BankRequestMapper;
 import com.payments.orchestrator.infrastructure.config.BankClientProperties;
 import com.payments.orchestrator.infrastructure.config.constants.BankCodesConstants;
+import com.payments.orchestrator.infrastructure.config.constants.ApiPathConstants;
+import com.payments.orchestrator.infrastructure.config.constants.BankResponseConstants;
 import com.payments.orchestrator.infrastructure.exception.ExternalServiceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -45,12 +47,12 @@ public class Bank1Strategy implements BankStrategy {
     @Override
     public Mono<BankTransferResult> sendTransfer(Transaction request) {
         return webClient.post()
-                .uri("/transfer")
+                .uri(ApiPathConstants.BANK_TRANSFER_PATH)
                 .bodyValue(mapper.toBankRequest(request))
                 .retrieve()
                 .bodyToMono(Bank1ResponseDto.class)
                 .map(res -> new BankTransferResult(
-                        "SUCCESS".equalsIgnoreCase(res.getStatus()),
+                        BankResponseConstants.BANK_STATUS_SUCCESS.equalsIgnoreCase(res.getStatus()),
                         res.getCode(),
                         res.getMessage(),
                         res.getTransactionId()

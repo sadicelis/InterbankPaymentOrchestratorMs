@@ -121,4 +121,82 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getCode()).isEqualTo("ERR_INTERNAL_SERVER_ERROR");
     }
+
+    @Test
+    @DisplayName("Debe manejar request sin URI")
+    void testRequestWithoutUri() {
+        InvalidTransactionException ex = new InvalidTransactionException("Invalid");
+        when(mockRequest.getDescription(false)).thenReturn("");
+
+        ResponseEntity<ApiResponse<?>> response = handler.handleInvalidTransactionException(ex, mockRequest);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Debe setear correctamente el timestamp en la respuesta")
+    void testResponseHasTimestamp() {
+        InvalidTransactionException ex = new InvalidTransactionException("Invalid");
+
+        ResponseEntity<ApiResponse<?>> response = handler.handleInvalidTransactionException(ex, mockRequest);
+
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getTimestamp()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Debe clasificar errores HTTP 5xx correctamente")
+    void testServerErrorClassification() {
+        BankCommunicationException ex = new BankCommunicationException("Server error 503");
+
+        ResponseEntity<ApiResponse<?>> response = handler.handleBankCommunicationException(ex, mockRequest);
+
+        assertThat(response.getStatusCode().value()).isGreaterThanOrEqualTo(400);
+    }
+
+    @Test
+    @DisplayName("BankCommunicationException debe retornar 503")
+    void testBankCommunicationExceptionStatus() {
+        BankCommunicationException ex = new BankCommunicationException("Bank service down");
+
+        ResponseEntity<ApiResponse<?>> response = handler.handleBankCommunicationException(ex, mockRequest);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        assertThat(response.getBody().getCode()).isEqualTo("ERR_BANK_COMMUNICATION");
+    }
+
+    @Test
+    @DisplayName("PersistenceException debe retornar 500 (Internal Server Error)")
+    void testPersistenceExceptionDetail() {
+        PersistenceException ex = new PersistenceException("Cannot connect to database");
+
+        ResponseEntity<ApiResponse<?>> response = handler.handlePersistenceException(ex, mockRequest);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getData()).isNull();
+    }
+
+    @Test
+    @DisplayName("TimeoutException debe retornar 504 (Gateway Timeout)")
+    void testTimeoutExceptionDetail() {
+        java.util.concurrent.TimeoutException ex = new java.util.concurrent.TimeoutException("Operation exceeded timeout");
+
+        ResponseEntity<ApiResponse<?>> response = handler.handleTimeoutException(ex, mockRequest);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.GATEWAY_TIMEOUT);
+        assertThat(response.getBody().getCode()).isEqualTo("ERR_TIMEOUT");
+    }
+
+    @Test
+    @DisplayName("BankStrategyResolutionException retorna 422 (Unprocessable Entity)")
+    void testBankStrategyResolutionExceptionStatus() {
+        BankStrategyResolutionException ex = new BankStrategyResolutionException("Multiple strategies configured");
+
+        ResponseEntity<ApiResponse<?>> response = handler.handleBankStrategyResolutionException(ex, mockRequest);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        assertThat(response.getBody().getCode()).isEqualTo("ERR_STRATEGY_RESOLUTION");
+    }
 }

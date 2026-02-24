@@ -7,6 +7,9 @@ import com.payments.orchestrator.domain.exception.DomainException;
 import com.payments.orchestrator.domain.exception.InvalidTransactionException;
 import com.payments.orchestrator.infrastructure.config.constants.ErrorCodesConstants;
 import com.payments.orchestrator.infrastructure.config.constants.ErrorMessagesConstants;
+import com.payments.orchestrator.infrastructure.config.constants.DefaultValuesConstants;
+import com.payments.orchestrator.infrastructure.config.constants.HttpHeaderConstants;
+import com.payments.orchestrator.infrastructure.config.constants.BankResponseConstants;
 import com.payments.orchestrator.infrastructure.exception.BankCommunicationException;
 import com.payments.orchestrator.infrastructure.exception.ExternalServiceException;
 import com.payments.orchestrator.infrastructure.exception.InfrastructureException;
@@ -170,7 +173,7 @@ public class GlobalExceptionHandler {
                 errorDetails
         );
 
-        HttpStatus status = ex.getHttpStatus() != null && ex.getHttpStatus() >= 500
+        HttpStatus status = ex.getHttpStatus() != null && ex.getHttpStatus() >= BankResponseConstants.HTTP_STATUS_SERVER_ERROR_THRESHOLD
                 ? HttpStatus.SERVICE_UNAVAILABLE
                 : HttpStatus.BAD_GATEWAY;
 
@@ -230,7 +233,7 @@ public class GlobalExceptionHandler {
         ErrorDetails errorDetails = ErrorDetails.builder()
                 .path(extractPath(request))
                 .timestamp(System.currentTimeMillis())
-                .detail("Campo(s) inválido(s) en la solicitud")
+                .detail(DefaultValuesConstants.DEFAULT_VALIDATION_ERROR_MESSAGE)
                 .exceptionType("MethodArgumentNotValidException")
                 .validationErrors(validationErrors)
                 .build();
@@ -290,6 +293,6 @@ public class GlobalExceptionHandler {
 
     private String extractPath(WebRequest request) {
         String path = request.getDescription(false);
-        return path != null && path.startsWith("uri=") ? path.substring(4) : path;
+        return path != null && path.startsWith(DefaultValuesConstants.REQUEST_PATH_PREFIX) ? path.substring(DefaultValuesConstants.REQUEST_PATH_PREFIX_LENGTH) : path;
     }
 }
