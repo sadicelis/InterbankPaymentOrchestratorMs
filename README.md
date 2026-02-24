@@ -47,10 +47,8 @@ docker exec -it sqlserver-payments /opt/mssql-tools18/bin/sqlcmd \
 ```bash
 # Check health status
 curl http://localhost:8080/health
-
-
+```
 ---
-
 ## 🧪 Testing
 
 ### Run All Tests
@@ -70,7 +68,6 @@ curl http://localhost:8080/health
 ./gradlew test jacocoTestReport
 # Open: build/reports/jacoco/test/html/index.html
 ```
-
 ---
 
 ## 📚 API Documentation
@@ -101,7 +98,7 @@ curl -X POST http://localhost:8080/v1/transfers \
 
 
 ```
-[Swagger of project](openapi.yml) 
+[Swagger](./openapi.yml) 
 ---
 
 ## 📊 Technology Stack
@@ -139,16 +136,16 @@ This project follows **Clean Architecture** with **Hexagonal (Ports & Adapters)*
                  │
 ┌────────────────▼────────────────────────────────┐
 │        Domain Model Layer (Core Logic)          │
-│  Aggregates + Value Objects + Business Rules   │
+│  Aggregates + Value Objects + Business Rules    │
 └────────────────┬────────────────────────────────┘
                  │
 ┌────────────────▼────────────────────────────────┐
 │     Infrastructure Layer (Adapters)             │
-│   Database + External APIs + Configuration     │
+│   Database + External APIs + Configuration      │
 └─────────────────────────────────────────────────┘
 ```
 
-For detailed architecture, see [ARCHITECTURE_DIAGRAMS.md](./ARCHITECTURE_DIAGRAMS.md).
+For detailed architecture, see [ARCHITECTURE_DIAGRAMS](./ARCHITECTURE_DIAGRAMS.md).
 
 ---
 
@@ -161,8 +158,6 @@ Complete documentation is available:
 | [ARCHITECTURE_DIAGRAMS.md](./ARCHITECTURE_DIAGRAMS.md) | System architecture with diagrams (flow, sequences, resilience patterns) |
 | [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Database schema with ER diagram, table definitions, indices, and SQL examples |
 | [PERFORMANCE.md](./PERFORMANCE.md) | Performance testing guide using JMeter (30 TPS target, results interpretation) |
-| [ERROR_HANDLING.md](./ERROR_HANDLING.md) | Complete error classification, exception hierarchy, and response formats |
-| [RESILIENCE.md](./RESILIENCE.md) | Circuit breaker strategy, retry logic, timeout configuration, and failure scenarios |
 | [KUBERNETES.md](k8s/README-k8s.md)  | Production deployment manifests (7 files: namespace, config, secrets, deployment, service, account, README) |
 
 ---

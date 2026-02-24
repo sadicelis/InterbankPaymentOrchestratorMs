@@ -75,4 +75,3 @@ We will execute a four-stage plan to understand the component's elastic behavior
    - JVM Warm-up: A pre-heating phase will be performed to ensure the JIT compiler has optimized the bytecode before formal measurement.
 
    - Dynamic Data Sets: Use of varied test data to bypass cache hits and simulate realistic input variety.
-
